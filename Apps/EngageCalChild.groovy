@@ -118,7 +118,7 @@ def poll() {
 def pageConfig() {
     return dynamicPage(name: "pageConfig", title: "Configuration", uninstall: true, nextPage: "spawnEngageCalDevice") {
         
-        section("${getFormat2("box", "Select Device Type")}") {
+        section("${getFormat("header-green", "${getImage("Blank")}"+" Select Device Type")}") {
             input "deviceType", "enum", title: "Select Device Type", multiple: false, required: true, submitOnChange: true, options: MAP_SUPPORTED_DEVICES.collect{entry -> entry.value.name}
             
             if (deviceType) {
@@ -132,14 +132,14 @@ def pageConfig() {
         }
         
         if (settings.deviceType) {
-            section("${getFormat2("box", "Select Device")}") {
+            section("${getFormat("header-green", "${getImage("Blank")}"+" Select Device")}") {
                 logDebug("capability.${state.deviceType.value.capability_alias}")
                 input "eventDevice", "capability.${state.deviceType.value.capability_alias}", title: "Select device to use:", required:true, multiple:false, submitOnChange:true
             }
         }
         
         if (settings.eventDevice) {
-            section("${getFormat2("box", "Calendar Settings")}") {
+            section("${getFormat("header-green", "${getImage("Blank")}"+" Calendar Settings")}") {
                 paragraph "${getFormat2("text", "Calendar refresh rate can be triggered once a day or periodically. Periodic options include every N hours, every N minutes, or you may enter a Cron expression.")}"
                 input name: "whenToRun", type: "enum", title: "When to Run", required: true, options:["Once Per Day", "Periodically"], submitOnChange: true
                 if ( settings.whenToRun == "Once Per Day" ) {
@@ -164,7 +164,7 @@ def pageConfig() {
         }
         
         if (settings.whenToRun) {
-            section("${getFormat2("box", "Calendar Preferences (Optional)")}") {
+            section("${getFormat("header-green", "${getImage("Blank")}"+" Calendar Preferences (Optional)")}") {
                 
                 def event_offset_paragraph = """
                 <u>Event Offset Preferences</u>:
@@ -214,7 +214,7 @@ def spawnEngageCalDevice() {
     }
     
     return dynamicPage(name: "deviceSettings", title: "${parent.getFormat("title", "Device Settings")}", install: true, uninstall: true, nextPage: "" ) {
-        section ("${getFormat2("box", "Settings")}") {
+        section ("${getFormat("header-green", "${getImage("Blank")}"+" Settings")}") {
             calendarDevice?.deviceSettings().each {
                 input it.value.input
             }

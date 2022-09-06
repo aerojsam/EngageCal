@@ -81,7 +81,7 @@ def mainPage() {
 
         def supportedDevices = MAP_SUPPORTED_DEVICES.collect{entry -> entry.value.capability_alias.capitalize()}
         
-        section(getFormat("header-green", "Getting Started")) {
+        section(getFormat("header-green", "${getImage("Blank")}"+" Getting Started")) {
             paragraph "Schedule device actions based on calendar events provided by an ICS link (URL). " +
                 "Each device is tied to an <b>engage</b> and <b>disengage</b> action. "
             
@@ -97,7 +97,7 @@ def mainPage() {
             paragraph "Start by creating a new EngageCal device below."
         }
 
-        section(getFormat("header-green", "EngageCal Devices")) {
+        section(getFormat("header-green", "${getImage("Blank")}"+" EngageCal Devices")) {
             app(name: "engageCalChildApp", appName: "EngageCal Child App", namespace: "EngageCal", title: "<b>Add a new EngageCal Device</b>", multiple: true)
         }
         

@@ -19,6 +19,12 @@ import java.text.SimpleDateFormat
     2: [name:"lock", capability_alias: "lock", engage: [method: "lock", state: "locked"], disengage: [method: "off", state: "unlocked"]],
     3: [name:"lockcode", capability_alias: "lockCodes", engage: [method: "setCode", state: null], disengage: [method: "deleteCode", state: null]]
     ]
+https://github.com/aerojsam/EngageCal/blob/main/Assets/Images/blank.png
+
+def getImage(type) {					// Modified from @Stephack Code
+    def loc = "<img src=https://github.com/aerojsam/EngageCal/blob/main/Assets/Images/"
+    if(type == "Blank") return "${loc}blank.png height=40 width=5}>"
+}
 
 def getFormat(type, myText="") {			// Modified from @Stephack Code
     if(type == "header-green") return "<div style='color:#ffffff;font-weight: bold;background-color:#81BC00;border: 1px solid;box-shadow: 2px 3px #A9A9A9'>${myText}</div>"
