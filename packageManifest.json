@@ -14,10 +14,11 @@
     },
     {
       "id": "6f6207fe-15ed-41bf-bc97-c3c0e07ead66",
-      "name": "CalendarResources",
+      "name": "library",
       "namespace": "EngageCal",
       "location": "https://raw.githubusercontent.com/aerojsam/EngageCal/main/Library/library.zip",
       "required": true
     }
-  ]
+  ],
+  "drivers": [{}]
 }
