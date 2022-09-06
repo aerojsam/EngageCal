@@ -26,6 +26,7 @@ metadata {
         attribute "eventEnd", "text"
         attribute "eventDescripton", "text"
         attribute "lastUpdated", "text"
+        attribute "testMode", "bool"
         command "refresh"
     }
 }
@@ -33,6 +34,7 @@ metadata {
 preferences {
     input(name: "icslink", type: "text", title: "<font style='font-size:15px; color:#1a77c9'>Insert ICS URL</font>", description: "<font style='font-size:12px; font-style: italic'>Insert URL of .ics calendar here</font>", required: true, submitOnChange: true)
     input(name: "logLevel", type: "enum", title: "<font style='font-size:12px; color:#1a77c9'>Log Verbosity</font>", description: "<font style='font-size:12px; font-style: italic'>Default: 'Debug' for 30 min and 'Info' thereafter</font>", options: [0:"Error", 1:"Warning", 2:"Info", 3:"Debug", 4:"Trace"], multiple: false, defaultValue: 3, required: true);
+    input(name: "testMode", type: "bool", title: "<font style='font-size:12px; color:#1a77c9'>Test Mode</font>", description: "<font style='font-size:12px; font-style: italic'>When enabled, performs engage/disengage test (order depends on invertEngage setting). Starts in 10 seconds and ends in 20 seconds. </font>", required: true, submitOnChange: true);
 }
 
 /*>> DEVICE SETTINGS: SWITCH >>*/
@@ -59,17 +61,27 @@ def updated() {
 def refresh() {
     logDebug("refresh()")
     
+    if (testMode) {
+        sendEvent(name: "testMode", value: true)
+    } else {
+        sendEvent(name: "testMode", value: false)
+    }
+    
     if(icslink) {
         deviceScheduledEvent = iCalProcessTodayEvent(icslink)
         
-        if (deviceScheduledEvent) {
+        if (deviceScheduledEvent && !testMode) {
             // schedule device event
 
             if (parent.invertEngage) {
-                parent.scheduleDeviceEvent(deviceScheduledEvent.end, deviceScheduledEvent.start, null)
+                parent.scheduleDeviceEvent(deviceScheduledEvent.end, deviceScheduledEvent.start)
             } else {
-                parent.scheduleDeviceEvent(deviceScheduledEvent.start, deviceScheduledEvent.end, null)
+                parent.scheduleDeviceEvent(deviceScheduledEvent.start, deviceScheduledEvent.end)
             }
+        }
+        
+        if (testMode) {
+            parent.scheduleDeviceEvent(null, null)
         }
 
         logInfo("refresh() - icslink: ${icslink}")
