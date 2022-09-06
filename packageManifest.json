@@ -55,12 +55,12 @@
   "files": [
     {
       "id": "1b64ae4a-d90d-49fc-8c34-918e1b7e7f70",
-      "name": "AppResources",
+      "name": "AppResources.groovy",
       "location": "https://raw.githubusercontent.com/aerojsam/EngageCal/main/Library/AppResources.groovy"
     },
     {
       "id": "20d3fd81-5e9d-4235-9877-2005bedf2ea5",
-      "name": "CalendarResources",
+      "name": "CalendarResources.groovy",
       "location": "https://raw.githubusercontent.com/aerojsam/EngageCal/main/Library/CalendarResources.groovy"
     }
   ]
