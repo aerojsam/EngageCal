@@ -1,3 +1,4 @@
 EngageCal
-AppResources
+EngageCal.Resources
 library EngageCal.AppResources.groovy
+library EngageCal.CalendarResources.groovy
