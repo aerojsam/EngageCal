@@ -19,7 +19,6 @@ import java.text.SimpleDateFormat
     2: [name:"lock", capability_alias: "lock", engage: [method: "lock", state: "locked"], disengage: [method: "off", state: "unlocked"]],
     3: [name:"lockcode", capability_alias: "lockCodes", engage: [method: "setCode", state: null], disengage: [method: "deleteCode", state: null]]
     ]
-https://github.com/aerojsam/EngageCal/blob/main/Assets/Images/blank.png
 
 def getImage(type) {					// Modified from @Stephack Code
     def loc = "<img src=https://github.com/aerojsam/EngageCal/blob/main/Assets/Images/"
