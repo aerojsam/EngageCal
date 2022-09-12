@@ -225,6 +225,7 @@ def spawnEngageCalDevice() {
 def scheduleDeviceEvent(engageScheduledTime, disengageScheduledTime) {
     def calendarDevice = getChildDevice(state.calendarDeviceID)
     def testMode = calendarDevice.currentValue("testMode")
+    log.info "aaa ${calendarDevice.testMode}"
     
     logInfo("Test Mode? ${testMode}")
     
@@ -237,7 +238,7 @@ def scheduleDeviceEvent(engageScheduledTime, disengageScheduledTime) {
     logInfo("Schedule Disengage ${disengageScheduledTime}")
     
     runOnce(engageScheduledTime, engage)
-    runOnce(scheduleEndTime, disengage)
+    runOnce(disengageScheduledTime, disengage)
 }
 
 def scheduleDeviceEventTestMode()

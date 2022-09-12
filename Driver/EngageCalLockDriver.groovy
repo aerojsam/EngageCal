@@ -16,6 +16,9 @@
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 
+#include EngageCal.AppResources
+#include EngageCal.CalendarResources
+
 metadata {
     definition (name: "EngageCal Lock Driver", namespace: "EngageCal", author: "aerojsam", importUrl: "") {
         capability "Refresh"
@@ -109,8 +112,10 @@ def disengage() {
 
 void lock() {
     sendEvent(name: "lock", value: "locked", descriptionText: "${device.displayName} is locked")
+    parent.eventDevice?.lock()
 }
 
 void unlock() {
     sendEvent(name: "lock", value: "unlocked", descriptionText: "${device.displayName} is unlocked")
+    parent.eventDevice?.unlock()
 }

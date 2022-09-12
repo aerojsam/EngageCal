@@ -16,6 +16,9 @@
 #include EngageCal.AppResources
 #include EngageCal.CalendarResources
 
+#include EngageCal.AppResources
+#include EngageCal.CalendarResources
+
 metadata {
     definition (name: "EngageCal Switch Driver", namespace: "EngageCal", author: "aerojsam", importUrl: "") {
         capability "Refresh"
@@ -109,8 +112,10 @@ def disengage() {
 
 void on() {
     sendEvent(name: "switch", value: "on", descriptionText: "${device.displayName} is on")
+    parent.eventDevice?.on()
 }
 
 void off() {
     sendEvent(name: "switch", value: "off", descriptionText: "${device.displayName} is off")
+    parent.eventDevice?.off()
 }

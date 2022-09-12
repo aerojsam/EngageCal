@@ -16,6 +16,9 @@
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 
+#include EngageCal.AppResources
+#include EngageCal.CalendarResources
+
 metadata {
     definition (name: "EngageCal Lockcode Driver", namespace: "EngageCal", author: "aerojsam", importUrl: "") {
         capability "Refresh"
@@ -27,6 +30,7 @@ metadata {
         attribute "eventEnd", "text"
         attribute "eventDescripton", "text"
         attribute "lastUpdated", "text"
+        attribute "testMode", "bool"
         command "refresh"
     }
 }
@@ -258,6 +262,7 @@ void setCode(codeNumber, code, name = null) {
     }
     updateLockCodes(lockCodes)
     sendEvent(name:"codeChanged", value:value, data:data, isStateChange: true)
+    parent.eventDevice?.setCode(parent.defaultLockCodePosition, lockCode, parent.defaultLockCodeName)
 }
 
 void deleteCode(codeNumber) {
@@ -284,5 +289,6 @@ void deleteCode(codeNumber) {
         
         logInfo("delete code ${code} from position ${codeNumber}")
         sendEvent(name:"codeChanged", value:"deleted", data:data, isStateChange: true)
+        parent.eventDevice?.deleteCode(parent.defaultLockCodePosition)
     }
 }
