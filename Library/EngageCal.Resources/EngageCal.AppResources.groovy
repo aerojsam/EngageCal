@@ -91,3 +91,101 @@ void logData(Map data) {
   }
 }
 // --------------------------------------------------------------------------------------------------------------------
+
+// Attribute handling ---------------------------------------------------------------------------------------------------------
+
+private Boolean attributeUpdateString(String val, String attribute) {
+  //
+  // Only update "attribute" if different
+  // Return true if "attribute" has actually been updated/created
+  //
+  if ((device.currentValue(attribute) as String) != val) {
+    sendEvent(name: attribute, value: val);
+    return (true);
+  }
+
+  return (false);
+}
+
+// ------------------------------------------------------------
+
+// Versioning -----------------------------------------------------------------------------------------------------------------
+public static String version() { return "v1.0.2"; }
+public static String gitHubUser() { return "aerojsam"; }
+public static String gitHubRepo() { return "EngageCal"; }
+public static String gitHubBranch() { return "main"; }
+
+private Map versionExtract(String ver) {
+  //
+  // Given any version string (e.g. version 2.5.78-prerelease) will return a Map as following:
+  //   Map.major version
+  //   Map.minor version
+  //   Map.build version
+  //   Map.desc  version
+  // or "null" if no version info was found in the given string
+  //
+  Map val = null;
+
+  if (ver) {
+    String pattern = /.*?(\d+)\.(\d+)\.(\d+).*/;
+    java.util.regex.Matcher matcher = ver =~ pattern;
+
+    if (matcher.groupCount() == 3) {
+      val = [:];
+      val.major = matcher[0][1].toInteger();
+      val.minor = matcher[0][2].toInteger();
+      val.build = matcher[0][3].toInteger();
+      val.desc = "v${val.major}.${val.minor}.${val.build}";
+    }
+  }
+
+  return (val);
+}
+
+Boolean versionUpdate() {
+  //
+  // Return true is a new version is available
+  //
+  logDebug("versionUpdate()");
+
+  Boolean ok = false;
+  String attribute = "driver";
+
+  try {
+    // Retrieve current version
+    Map verCur = versionExtract(version());
+    if (verCur) {
+      // Retrieve latest version from GitHub repository manifest
+      // If the file is not found, it will throw an exception
+      Map verNew = null;
+      String manifestText = "https://raw.githubusercontent.com/${gitHubUser()}/${gitHubRepo()}/${gitHubBranch()}/packageManifest.json".toURL().getText();
+      if (manifestText) {
+        // text -> json
+        Object parser = new groovy.json.JsonSlurper();
+        Object manifest = parser.parseText(manifestText);
+
+        verNew = versionExtract(manifest.version);
+        if (verNew) {
+          // Compare versions
+          if (verCur.major > verNew.major) verNew = null;
+          else if (verCur.major == verNew.major) {
+            if (verCur.minor > verNew.minor) verNew = null;
+            else if (verCur.minor == verNew.minor) {
+              if (verCur.build >= verNew.build) verNew = null;
+            }
+          }
+        }
+      }
+
+      String version = verCur.desc;
+      if (verNew) version = "<font style='color:#3ea72d'>${verCur.desc} (${verNew.desc} available)</font>";
+      ok = attributeUpdateString(version, attribute);
+    }
+  }
+  catch (Exception e) {
+    logError("Exception in versionUpdate(): ${e}");
+  }
+
+  return (ok);
+}
+// --------------------------------------------------------------------------------------------------------------------

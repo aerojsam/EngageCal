@@ -59,6 +59,10 @@ def updated() {
     logDebug("updated()")
     unschedule()
     refresh()
+
+    // Update driver version now and every Sunday @ 2am
+    versionUpdate();
+    schedule("0 0 2 ? * 1 *", versionUpdate);
 }
 
 def refresh() {
