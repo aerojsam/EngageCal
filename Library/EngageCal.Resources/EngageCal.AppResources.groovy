@@ -39,6 +39,14 @@ def getFormat2(type, displayText=""){ // Modified from @Stephack and @dman2306 C
     if(type == "line") return "<hr style='background-color:" + color + "; height: 1px; border: 0;'>"
 }
 
+void updateAttr(String aKey, aValue){
+    sendEvent(name:aKey, value:aValue)
+}
+
+void updateAttr(String aKey, aValue, aUnit){
+    sendEvent(name:aKey, value:aValue, unit:aUnit)
+}
+
 Integer logGetLevel() {
   //
   // Get the log level as an Integer:

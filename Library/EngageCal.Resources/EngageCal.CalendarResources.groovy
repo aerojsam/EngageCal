@@ -15,32 +15,59 @@ import groovy.time.TimeCategory
 import java.text.SimpleDateFormat
 
 import java.util.regex.*
-    
-@Field static String REGEX_ICAL=/^(BEGIN:VEVENT.+?DTEND.+?:(.+?)DTSTART.+?:(.+?)UID:(.+?)DESCRIPTION:(.+?)SUMMARY:(.+?)END:VEVENT)$/
 
+/* Based on VEVENT Format Definition:
+ * https://icalendar.org/iCalendar-RFC-5545/3-6-1-event-component.html
+ */
+@Field static String ICAL_SPLIT_REGEX="""\\s(?=(?:DTSTAMP|UID|DTSTART|CLASS|CREATED|DESCRIPTION|GEO|LAST-MOD|LOCATION|ORGANIZER|PRIORITY|SEQ|STATUS|SUMMARY|TRANSP
+                                        |URL|RECURID|RRULE|DTEND|DURATION|ATTACH|ATTENDEE|CATEGORIES|COMMENT|CONTACT|EXDATE|RSTATUS|RELATED|RESOURCES|RDATE|X-PROP|IANA_PROP)\\S*:\\S+)""".stripMargin()
+
+/*
+ * Inspired by https://github.com/Mark-C-uk/Hubitat/blob/master/ical
+ */
 def iCalParse(ical_raw) {
     HashMap iCalMap = [:]
-    Integer eventCount = 0
+    Integer eventCount = 0, idx = 0
+    String ical_processed
+    
     iCalMap.put("event",[:])
     
-    //log.debug "${ical_raw}"
+    ical_processed = ical_raw.replace("\n", " ").replace("\r", " ");
+    ical_processed_split = ical_raw.split(ICAL_SPLIT_REGEX)
     
-    Pattern pattern = Pattern.compile(REGEX_ICAL, Pattern.MULTILINE | Pattern.COMMENTS | Pattern.UNICODE_CHARACTER_CLASS | Pattern.DOTALL);
-    Matcher matcher = pattern.matcher(ical_raw);
+    log.debug "RAW>>"
+    log.debug "${ical_processed}"
+    log.debug "RAW<<"
     
-    while (matcher.find()) {
-        eventCount++
-            
-        // create calendar event
-        iCalMap.event.put(eventCount.toString(),[:])
+    log.debug "PX>>"
+    log.debug "${ical_processed_split}"
+    log.debug "PX<<"
+
+    for (String element : ical_processed_split) {
         
-        // populate calendar event
-        iCalMap.event[eventCount.toString()].put("end", matcher.group(2))
-        iCalMap.event[eventCount.toString()].put("start", matcher.group(3))
-        iCalMap.event[eventCount.toString()].put("description", matcher.group(5))
+        // Start of Calendar Event (BEGIN:VEVENT)
+        if ( element.trim().contains("BEGIN") && element.trim().contains("VEVENT") ) {
+            eventCount = eventCount + 1
+            log.debug "New Calendar Event (${eventCount})"
+            iCalMap.event.put(eventCount.toString(),[:])
+        }
+
+        // Ahead of the BEGIN:VEVENT, make sure token is not empty
+        if ( eventCount != 0 ) {
+            // if such token is DSTART, we've found the calendar event start date
+            if ( element.trim().contains("DTSTART") )
+                iCalMap.event[eventCount.toString()].put("start", element.split(":")[1].trim())
+            else if ( element.trim().contains("DTEND") )
+                iCalMap.event[eventCount.toString()].put("end", element.split(":")[1].trim())
+            else if ( element.trim().contains("DESCRIPTION") ) {
+                iCalMap.event[eventCount.toString()].put("description", element.split(":", limit=2)[1].trim())
+            }
+        }
+        
+        idx++
     }
-    
-    //log.debug "${iCalMap}"
+
+    log.debug "${iCalMap}"
     
     // Sort data based on calendar event start
     if (eventCount) {
@@ -66,7 +93,7 @@ def iCalProcessEventDateTime(data) {
     return [eventTime, eventDate, zDate]
 }
 
-def iCalProcessTodayEvent(icallink) {
+def iCalProcessTodayEvent(icallink, eventOffsetStartSeconds, eventOffsetEndSeconds) {
     HashMap iCalMap = [:] 
     Integer eCount = 0
     iCalMap.put("event",[:])
@@ -105,18 +132,20 @@ def iCalProcessTodayEvent(icallink) {
                         //log.debug "iCalProcessTodayEvent() - Event End Offset (minutes): ${settings.offsetEnd}"
                         
                         // Apply calendar event start offset, if any
-                        if (settings.offsetStart) {
-                            int minutesOffset = settings.offsetStart
+                        if (eventOffsetStartSeconds) {
+                            int secondsOffset = eventOffsetStartSeconds
                             use (TimeCategory) {
-                                scheduleStartDate += minutesOffset.minutes
+                                scheduleStartDate += secondsOffset.seconds
+                                log.debug "iCalProcessTodayEvent() - Schedule Start Date ${scheduleStartDate} (offset ${secondsOffset.seconds})"
                             }
                         }
                         
                         // Apply calendar event end offset, if any
-                        if (settings.offsetEnd) {
-                            int minutesOffset = settings.offsetEnd
+                        if (eventOffsetEndSeconds) {
+                            int secondsOffset = eventOffsetEndSeconds
                             use (TimeCategory) {
-                                scheduleEndDate += minutesOffset.minutes
+                                scheduleEndDate += secondsOffset.seconds
+                                log.debug "iCalProcessTodayEvent() - Schedule End Date ${scheduleEndDate} (offset ${secondsOffset.seconds})"
                             }
                         }
                         

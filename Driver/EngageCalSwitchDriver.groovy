@@ -16,9 +16,6 @@
 #include EngageCal.AppResources
 #include EngageCal.CalendarResources
 
-#include EngageCal.AppResources
-#include EngageCal.CalendarResources
-
 metadata {
     definition (name: "EngageCal Switch Driver", namespace: "EngageCal", author: "aerojsam", importUrl: "") {
         capability "Refresh"
@@ -31,6 +28,7 @@ metadata {
         attribute "lastUpdated", "text"
         attribute "testMode", "bool"
         command "refresh"
+        command "clearEventCache"
     }
 }
 
@@ -53,6 +51,8 @@ def installed() {
     logDebug("installed()")
     unschedule()
     refresh()
+
+    state.eventCurrentlyScheduled = false
 }
 
 def updated() {
@@ -70,8 +70,10 @@ def refresh() {
         sendEvent(name: "testMode", value: false)
     }
     
-    if(icslink) {
-        deviceScheduledEvent = iCalProcessTodayEvent(icslink)
+    if(icslink && !state.eventCurrentlyScheduled) {
+        (eventOffsetStartSeconds, eventOffsetEndSeconds) = parent.getEventOffsetsInSeconds()
+        log.info("Process Event For Today. eventOffsetStartSeconds ${eventOffsetStartSeconds} eventOffsetEndSeconds ${eventOffsetEndSeconds}")
+        deviceScheduledEvent = iCalProcessTodayEvent(icslink, eventOffsetStartSeconds, eventOffsetEndSeconds)
         
         if (deviceScheduledEvent && !testMode) {
             // schedule device event
@@ -81,6 +83,11 @@ def refresh() {
             } else {
                 parent.scheduleDeviceEvent(deviceScheduledEvent.start, deviceScheduledEvent.end)
             }
+        } else if (testMode) {
+            parent.scheduleDeviceEventTestMode()
+            state.eventCurrentlyScheduled = true
+        } else {
+            state.eventCurrentlyScheduled = false
         }
         
         if (testMode) {
@@ -88,34 +95,47 @@ def refresh() {
         }
 
         logInfo("refresh() - icslink: ${icslink}")
-        lu = new Date()
         
         calendarHtmlView = CalendarRenderViewFromICS(icslink)
         
-        sendEvent(name: "lastUpdated", value: lu)
+        sendEvent(name: "lastUpdated", value: new Date())
         sendEvent(name: "calendarView", value: calendarHtmlView)
         sendEvent(name: "eventStart", value: deviceScheduledEvent.start ? deviceScheduledEvent.start : "No Calendar Events Today")
         sendEvent(name: "eventEnd", value: deviceScheduledEvent.end ? deviceScheduledEvent.end : "No Calendar Events Today")
         sendEvent(name: "eventDescripton", value: deviceScheduledEvent.description ? deviceScheduledEvent.description : "None")
+    } else if(state.eventCurrentlyScheduled) {
+        logInfo("refresh() - Device Event Currently Scheduled!")
     } else {
         logInfo("refresh() - ICS URL Link Not Provided!")
     }
 }
 
+def clearEventCache() {
+    unschedule()
+    updateAttr("lastUpdated", "")
+    updateAttr("calendarView", "")
+    updateAttr("eventStart", "")
+    updateAttr("eventEnd", "")
+    updateAttr("eventDescripton", "")
+    updateAttr("testMode", false)
+    state.eventCurrentlyScheduled = false
+}
+
 def engage() {
     on()
+    parent.eventDevice?.on()
 }
 
 def disengage() {
     off()
+    parent.eventDevice?.off()
+    state.eventCurrentlyScheduled = false
 }
 
 void on() {
     sendEvent(name: "switch", value: "on", descriptionText: "${device.displayName} is on")
-    parent.eventDevice?.on()
 }
 
 void off() {
     sendEvent(name: "switch", value: "off", descriptionText: "${device.displayName} is off")
-    parent.eventDevice?.off()
 }

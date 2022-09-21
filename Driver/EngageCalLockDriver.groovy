@@ -16,9 +16,6 @@
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 
-#include EngageCal.AppResources
-#include EngageCal.CalendarResources
-
 metadata {
     definition (name: "EngageCal Lock Driver", namespace: "EngageCal", author: "aerojsam", importUrl: "") {
         capability "Refresh"
@@ -32,6 +29,7 @@ metadata {
         attribute "lastUpdated", "text"
         attribute "testMode", "bool"
         command "refresh"
+        command "clearEventCache"
     }
 }
 
@@ -54,6 +52,8 @@ def installed() {
     logDebug("installed()")
     unschedule()
     refresh()
+
+    state.eventCurrentlyScheduled = false
 }
 
 def updated() {
@@ -71,8 +71,10 @@ def refresh() {
         sendEvent(name: "testMode", value: false)
     }
     
-    if(icslink) {
-        deviceScheduledEvent = iCalProcessTodayEvent(icslink)
+    if(icslink && !state.eventCurrentlyScheduled) {
+        (eventOffsetStartSeconds, eventOffsetEndSeconds) = parent.getEventOffsetsInSeconds()
+        log.info("Process Event For Today. eventOffsetStartSeconds ${eventOffsetStartSeconds} eventOffsetEndSeconds ${eventOffsetEndSeconds}")
+        deviceScheduledEvent = iCalProcessTodayEvent(icslink, eventOffsetStartSeconds, eventOffsetEndSeconds)
         
         if (deviceScheduledEvent && !testMode) {
             // schedule device event
@@ -81,41 +83,55 @@ def refresh() {
             } else {
                 parent.scheduleDeviceEvent(deviceScheduledEvent.start, deviceScheduledEvent.end)
             }
-        }
-
-        if (testMode) {
-            parent.scheduleDeviceEvent(null, null)
+        } else if (testMode) {
+            parent.scheduleDeviceEventTestMode()
+            state.eventCurrentlyScheduled = true
+        } else {
+            state.eventCurrentlyScheduled = false
         }
 
         logInfo("refresh() - icslink: ${icslink}")
-        lu = new Date()
         
         calendarHtmlView = CalendarRenderViewFromICS(icslink)
         
-        sendEvent(name: "lastUpdated", value: lu)
+        sendEvent(name: "lastUpdated", value: new Date())
         sendEvent(name: "calendarView", value: calendarHtmlView)
         sendEvent(name: "eventStart", value: deviceScheduledEvent.start ? deviceScheduledEvent.start : "No Calendar Events Today")
         sendEvent(name: "eventEnd", value: deviceScheduledEvent.end ? deviceScheduledEvent.end : "No Calendar Events Today")
         sendEvent(name: "eventDescripton", value: deviceScheduledEvent.description ? deviceScheduledEvent.description : "None")
+    } else if (state.eventCurrentlyScheduled) {
+        logInfo("refresh() - Device Event Currently Scheduled!")
     } else {
         logInfo("refresh() - ICS URL Link Not Provided!")
     }
 }
 
+def clearEventCache() {
+    unschedule()
+    updateAttr("lastUpdated", "")
+    updateAttr("calendarView", "")
+    updateAttr("eventStart", "")
+    updateAttr("eventEnd", "")
+    updateAttr("eventDescripton", "")
+    updateAttr("testMode", false)
+    state.eventCurrentlyScheduled = false
+}
+
 def engage() {
     lock()
+    parent.eventDevice?.lock()
 }
 
 def disengage() {
     unlock()
+    parent.eventDevice?.unlock()
+    state.eventCurrentlyScheduled = false
 }
 
 void lock() {
     sendEvent(name: "lock", value: "locked", descriptionText: "${device.displayName} is locked")
-    parent.eventDevice?.lock()
 }
 
 void unlock() {
     sendEvent(name: "lock", value: "unlocked", descriptionText: "${device.displayName} is unlocked")
-    parent.eventDevice?.unlock()
 }

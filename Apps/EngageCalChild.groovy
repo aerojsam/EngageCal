@@ -164,28 +164,48 @@ def pageConfig() {
         }
         
         if (settings.whenToRun) {
-            section("${getFormat("header-green", "${getImage("Blank")}"+" Calendar Preferences (Optional)")}") {
+            section("${getFormat("header-green", "${getImage("Blank")}"+" Event Time Settings")}") {
                 
-                def event_offset_paragraph = """
-                <u>Event Offset Preferences</u>:
-                - By default, devices engage/disengage based on the start/end of the calendar event, respectively.
-                - All-Day calendar events start and end at 00:00 AM (midnight) of that day.
-                - Use the settings below to offset the start/end of the device engage/disengage event, relative to the calendar event.
-
-                Examples:
-                - <u>Schedule device engage at 14:30:00, relative to the start of the calendar event</u>
-                    Enter "870" in "Event Start Offset in minutes (+/-)" Field
-                - <u>Schedule device disengage at 14:00:00, relative to the end of the calendar event</u>
-                    Enter "840" in "Event End Offset in minutes (+/-)" Field
-                """.stripIndent()
-                
-                paragraph "${getFormat2("text", "${event_offset_paragraph}")}"
-                input name: "setOffset", type: "bool", title: "Set offset?", defaultValue: false, required: false, submitOnChange: true
-                if ( settings.setOffset == true ) {
-                    input name: "offsetStart", type: "decimal", title: "Event Start Offset in minutes (+/-)", required: false
-                    input name: "offsetEnd", type: "decimal", title: "Event End Offset in minutes (+/-)", required: false
+                input name: "setStartOffset", type: "bool", title: "Adjust Start Event Time?", defaultValue: false, required: false, submitOnChange: true
+                if ( settings.setStartOffset == true ) {
+                    
+                    paragraph "<i>Configure event to start...</i>"
+                    input name: "offsetStartHours", type: "number", title: "Hours", width: 4, required: true, submitOnChange: true
+                    input name: "offsetStartMinutes", type: "number", title: "Minutes", range: "0..59", width: 4, required: true, submitOnChange: true
+                    input name: "offsetStartSeconds", type: "number", title: "Seconds", range: "0..59", width: 4, required: true, submitOnChange: true
+                    input name: "offsetStartBeforeAfter", type: "enum", title: "Before or After", required: true, options:["Before", "After"], submitOnChange: true
+                    
+                    if (settings.offsetStartBeforeAfter) {
+                        def offsetStartBeforeAfterParagraph = "<b><i>Device trigger starts ${offsetStartHours?offsetStartHours:0} ${offsetStartHours==1?"hour":"hours"}, " \
+                        + "${offsetStartMinutes?offsetStartMinutes:0} ${offsetStartMinutes==1?"minute":"minutes"}, and "\
+                        + "${offsetStartSeconds?offsetStartSeconds:0} ${offsetStartSeconds==1?"second":"seconds"} ${offsetStartBeforeAfter.uncapitalize()} the real start of the event.</i></b>"
+                        
+                        paragraph "${getFormat2("line")}"
+                        paragraph "${getFormat2("text", "${offsetStartBeforeAfterParagraph}")}"
+                        paragraph "${getFormat2("line")}"
+                    }
                 }
-                paragraph "${getFormat2("line")}"
+                
+                input name: "setEndOffset", type: "bool", title: "Adjust End Event Time?", defaultValue: false, required: false, submitOnChange: true
+                if ( settings.setEndOffset == true ) {
+                    
+                    paragraph "<i>Configure event to end...</i>"
+                    input name: "offsetEndHours", type: "number", title: "Hours", width: 4, required: true, submitOnChange: true
+                    input name: "offsetEndMinutes", type: "number", title: "Minutes", range: "0..59", width: 4, required: true, submitOnChange: true
+                    input name: "offsetEndSeconds", type: "number", title: "Seconds", range: "0..59", width: 4, required: true, submitOnChange: true
+                    input name: "offsetEndBeforeAfter", type: "enum", title: "Before or After", required: true, options:["Before", "After"], submitOnChange: true
+                    
+                    if (settings.offsetEndBeforeAfter) {
+                        def offsetEndBeforeAfterParagraph = "<b><i>Device trigger ends ${offsetEndHours?offsetEndHours:0} ${offsetEndHours==1?"hour":"hours"}, " \
+                        + "${offsetEndMinutes?offsetEndMinutes:0} ${offsetEndMinutes==1?"minute":"minutes"}, and "\
+                        + "${offsetEndSeconds?offsetEndSeconds:0} ${offsetEndSeconds==1?"second":"seconds"} ${offsetEndBeforeAfter.uncapitalize()} the real end of the event.</i></b>"
+                        
+                        paragraph "${getFormat2("line")}"
+                        paragraph "${getFormat2("text", "${offsetEndBeforeAfterParagraph}")}"
+                        paragraph "${getFormat2("line")}"
+                    }
+                }
+                
             }
         }
         
@@ -196,6 +216,38 @@ def pageConfig() {
         }
         
     }
+}
+
+def getEventOffsetsInSeconds()
+{
+    def eventOffsetStartSeconds = 0
+    def eventOffsetEndSeconds = 0
+    
+    if ( settings.offsetStartHours ) {
+        eventOffsetStartSeconds += settings.offsetStartHours*60*60
+    }
+    
+    if ( settings.offsetStartMinutes ) {
+        eventOffsetStartSeconds += settings.offsetStartMinutes*60
+    }
+    
+    if ( settings.offsetStartSeconds ) {
+        eventOffsetStartSeconds += settings.offsetStartSeconds
+    }
+    
+    if ( settings.offsetEndHours ) {
+        eventOffsetEndSeconds += settings.offsetEndHours*60*60
+    }
+    
+    if ( settings.offsetEndMinutes ) {
+        eventOffsetEndSeconds += settings.offsetEndMinutes*60
+    }
+    
+    if ( settings.offsetEndSeconds ) {
+        eventOffsetEndSeconds += settings.offsetEndSeconds
+    }
+    
+    return [eventOffsetStartSeconds, eventOffsetEndSeconds]
 }
 
 def spawnEngageCalDevice() {
@@ -224,15 +276,6 @@ def spawnEngageCalDevice() {
 
 def scheduleDeviceEvent(engageScheduledTime, disengageScheduledTime) {
     def calendarDevice = getChildDevice(state.calendarDeviceID)
-    def testMode = calendarDevice.currentValue("testMode")
-    log.info "aaa ${calendarDevice.testMode}"
-    
-    logInfo("Test Mode? ${testMode}")
-    
-    if (testMode) {
-        scheduleDeviceEventTestMode()
-        return 0
-    }
     
     logInfo("Schedule Engage ${engageScheduledTime}") 
     logInfo("Schedule Disengage ${disengageScheduledTime}")

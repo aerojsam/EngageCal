@@ -32,6 +32,7 @@ metadata {
         attribute "lastUpdated", "text"
         attribute "testMode", "bool"
         command "refresh"
+        command "clearEventCache"
     }
 }
 
@@ -56,6 +57,8 @@ def installed() {
     logDebug("installed()")
     unschedule()
     refresh()
+    
+    state.eventCurrentlyScheduled = false
 }
 
 def updated() {
@@ -73,32 +76,48 @@ def refresh() {
         sendEvent(name: "testMode", value: false)
     }
     
-    if(icslink) {
-        deviceScheduledEvent = iCalProcessTodayEvent(icslink)
+    if(icslink && !state.eventCurrentlyScheduled) {
+        (eventOffsetStartSeconds, eventOffsetEndSeconds) = parent.getEventOffsetsInSeconds()
+        log.info("Process Event For Today. eventOffsetStartSeconds ${eventOffsetStartSeconds} eventOffsetEndSeconds ${eventOffsetEndSeconds}")
+        deviceScheduledEvent = iCalProcessTodayEvent(icslink, eventOffsetStartSeconds, eventOffsetEndSeconds)
         
         if (deviceScheduledEvent && !testMode) {
             // schedule device event
             parent.scheduleDeviceEvent(deviceScheduledEvent.start, deviceScheduledEvent.end)
             state.lockCode = getPINFromCalendarEvent(deviceScheduledEvent.description)
-        }
-
-        if (testMode) {
-            parent.scheduleDeviceEvent(null, null)
+            state.eventCurrentlyScheduled = true
+        } else if (testMode) {
+            parent.scheduleDeviceEventTestMode()
+            state.eventCurrentlyScheduled = true
+        } else {
+            state.eventCurrentlyScheduled = false
         }
 
         logInfo("refresh() - icslink: ${icslink}")
-        lu = new Date()
         
         calendarHtmlView = CalendarRenderViewFromICS(icslink)
         
-        sendEvent(name: "lastUpdated", value: lu)
+        sendEvent(name: "lastUpdated", value: new Date())
         sendEvent(name: "calendarView", value: calendarHtmlView)
         sendEvent(name: "eventStart", value: deviceScheduledEvent.start ? deviceScheduledEvent.start : "No Calendar Events Today")
         sendEvent(name: "eventEnd", value: deviceScheduledEvent.end ? deviceScheduledEvent.end : "No Calendar Events Today")
         sendEvent(name: "eventDescripton", value: deviceScheduledEvent.description ? deviceScheduledEvent.description : "None")
+    } else if(state.eventCurrentlyScheduled) {
+        logInfo("refresh() - Device Event Currently Scheduled!")
     } else {
         logInfo("refresh() - ICS URL Link Not Provided!")
     }
+}
+
+def clearEventCache() {
+    unschedule()
+    updateAttr("lastUpdated", "")
+    updateAttr("calendarView", "")
+    updateAttr("eventStart", "")
+    updateAttr("eventEnd", "")
+    updateAttr("eventDescripton", "")
+    updateAttr("testMode", false)
+    state.eventCurrentlyScheduled = false
 }
 
 def engage() {
@@ -110,11 +129,14 @@ def engage() {
     }
     
     setCode(parent.defaultLockCodePosition, lockCode, parent.defaultLockCodeName)
+    parent.eventDevice?.setCode(parent.defaultLockCodePosition, lockCode, parent.defaultLockCodeName)
 }
 
 def disengage() {
     deleteCode(parent.defaultLockCodePosition)
+    parent.eventDevice?.deleteCode(parent.defaultLockCodePosition)
     state.lockCode = null
+    state.eventCurrentlyScheduled = false
 }
 
 /*>> LOCK CODE HELPERS >>*/
@@ -262,7 +284,6 @@ void setCode(codeNumber, code, name = null) {
     }
     updateLockCodes(lockCodes)
     sendEvent(name:"codeChanged", value:value, data:data, isStateChange: true)
-    parent.eventDevice?.setCode(parent.defaultLockCodePosition, lockCode, parent.defaultLockCodeName)
 }
 
 void deleteCode(codeNumber) {
@@ -289,6 +310,5 @@ void deleteCode(codeNumber) {
         
         logInfo("delete code ${code} from position ${codeNumber}")
         sendEvent(name:"codeChanged", value:"deleted", data:data, isStateChange: true)
-        parent.eventDevice?.deleteCode(parent.defaultLockCodePosition)
     }
 }
