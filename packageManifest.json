@@ -4,27 +4,6 @@
   "minimumHEVersion": "2.1.9",
   "dateReleased": "2022-10-25",
   "bundles": [
-    {
-      "id": "6aa37232-05b9-4780-9cdb-d7176ba50fbe",
-      "name": "EngageCal.AppResources",
-      "namespace": "EngageCal",
-      "location": "https://raw.githubusercontent.com/aerojsam/EngageCal/main/Library/library.zip",
-      "required": true
-    },
-    {
-      "id": "410ea5b8-d520-4d44-9655-cf74d2cecd55",
-      "name": "EngageCal.CalendarResources",
-      "namespace": "EngageCal",
-      "location": "https://raw.githubusercontent.com/aerojsam/EngageCal/main/Library/library.zip",
-      "required": true
-    },
-    {
-      "id": "6f6207fe-15ed-41bf-bc97-c3c0e07ead66",
-      "name": "library",
-      "namespace": "EngageCal",
-      "location": "https://raw.githubusercontent.com/aerojsam/EngageCal/main/Library/library.zip",
-      "required": true
-    },
 	{
 		"id": "8cff3efd-b31d-47fd-bbf8-9fade2247a7d",
 		"name": "alertme",
