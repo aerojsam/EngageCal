@@ -13,8 +13,8 @@
  *
  */
 
-import groovy.json.JsonSlurper
-import groovy.json.JsonOutput
+#include EngageCal.AppResources
+#include EngageCal.CalendarResources
 
 metadata {
     definition (name: "EngageCal Lock Driver", namespace: "EngageCal", author: "aerojsam", importUrl: "") {
