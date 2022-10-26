@@ -1,8 +1,8 @@
 {
   "packageName": "EngageCal",
   "author": "aerojsam",
-  "minimumHEVersion": "2.1.9",
-  "dateReleased": "2022-10-25",
+  "version": "1.0.2",
+  "dateReleased": "2022-09-05",
   "bundles": [
 	{
 		"id": "8cff3efd-b31d-47fd-bbf8-9fade2247a7d",
@@ -18,16 +18,5 @@
 		"location": "https://raw.githubusercontent.com/aerojsam/EngageCal/main/Library/library.zip",
 		"required": true
 	}
-  ],
-  "apps": [
-    {
-      "id": "f4c4609b-4289-49b3-ae4f-bd6130d0529c",
-      "name": "EngageCal",
-      "namespace": "EngageCal",
-      "location": "https://raw.githubusercontent.com/aerojsam/EngageCal/main/Apps/EngageCal.groovy",
-      "required": true,
-      "oauth": false,
-      "version": "1.00"
-    }
   ]
 }
