@@ -1,7 +1,7 @@
 {
   "packageName": "EngageCal",
   "author": "aerojsam",
-  "version": "1.0.2",
+  "version": "1.0.0",
   "dateReleased": "2022-09-05",
   "bundles": [
     {
