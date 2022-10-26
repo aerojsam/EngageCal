@@ -25,31 +25,5 @@
       "location": "https://raw.githubusercontent.com/aerojsam/EngageCal/main/Library/library.zip",
       "required": true
     }
-  ],
-  "drivers": [
-    {
-      "id": "a045fe39-1ccc-4ac1-89eb-994a8843afd5",
-      "name": "EngageCal Switch Driver",
-      "namespace": "EngageCal",
-      "location": "https://raw.githubusercontent.com/aerojsam/EngageCal/main/Driver/EngageCalSwitchDriver.groovy",
-      "required": true,
-      "version": "1.0"
-    },
-    {
-      "id": "d07e3822-662a-4be2-bd34-2a3c043dffc0",
-      "name": "EngageCal Lockcode Driver",
-      "namespace": "EngageCal",
-      "location": "https://raw.githubusercontent.com/aerojsam/EngageCal/main/Driver/EngageCalLockCodeDriver.groovy",
-      "required": true,
-      "version": "1.0"
-    },
-    {
-      "id": "c81106f7-7b28-4c0d-b096-26349341e229",
-      "name": "EngageCal Lock Driver",
-      "namespace": "EngageCal",
-      "location": "https://raw.githubusercontent.com/aerojsam/EngageCal/main/Driver/EngageCalLockDriver.groovy",
-      "required": true,
-      "version": "1.0"
-    }
   ]
 }
