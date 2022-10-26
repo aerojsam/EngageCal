@@ -2,7 +2,7 @@ library (
         author: "aerojsam",
         category: "Utils",
         description: "iCalendar Helpers",
-        name: "CalendarResources",
+        name: "EngageCal.CalendarResources",
         namespace: "EngageCal",
         documentationLink: ""
 )

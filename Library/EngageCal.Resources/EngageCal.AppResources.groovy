@@ -1,8 +1,8 @@
 library (
         author: "aerojsam",
-        category: "Apps",
+        category: "Utils",
         description: "App Resources",
-        name: "AppResources",
+        name: "EngageCal.AppResources",
         namespace: "EngageCal",
         documentationLink: ""
 )
